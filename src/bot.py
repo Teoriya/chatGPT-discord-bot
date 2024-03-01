@@ -18,9 +18,20 @@ def run_discord_bot():
         loop.create_task(client.process_messages())
         logger.info(f'{client.user} is now running!')
 
+    async def check_DM_interaction(interaction):
+        if interaction.channel.type == discord.ChannelType.private:
+            await interaction.response.defer(ephemeral=False)
+            await interaction.followup.send(
+                    "> **WARN: You can't use the bot in DMs. Please use the bot in the official Samatva Server.**\n\nhttps://discord.gg/samatva")
+            logger.warning("\x1b[31mYou can't use the bot in DMs\x1b[0m")
+            return True
+
+
 
     @client.tree.command(name="chat", description="Have a chat with ChatGPT")
     async def chat(interaction: discord.Interaction, *, message: str):
+        if await check_DM_interaction(interaction):
+            return
         if client.is_replying_all == "True":
             await interaction.response.defer(ephemeral=False)
             await interaction.followup.send(
@@ -39,6 +50,8 @@ def run_discord_bot():
 
     @client.tree.command(name="private", description="Toggle private access")
     async def private(interaction: discord.Interaction):
+        if await check_DM_interaction(interaction):
+            return
         await interaction.response.defer(ephemeral=False)
         if not client.isPrivate:
             client.isPrivate = not client.isPrivate
@@ -54,6 +67,8 @@ def run_discord_bot():
     @client.tree.command(name="public", description="Toggle public access")
     async def public(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=False)
+        if await check_DM_interaction(interaction):
+            return
         if client.isPrivate:
             client.isPrivate = not client.isPrivate
             await interaction.followup.send(
@@ -67,6 +82,8 @@ def run_discord_bot():
 
     @client.tree.command(name="replyall", description="Toggle replyAll access")
     async def replyall(interaction: discord.Interaction):
+        if await check_DM_interaction(interaction):
+            return
         client.replying_all_discord_channel_id = str(interaction.channel_id)
         await interaction.response.defer(ephemeral=False)
         if client.is_replying_all == "True":
@@ -92,6 +109,8 @@ def run_discord_bot():
     ])
 
     async def chat_model(interaction: discord.Interaction, choices: app_commands.Choice[str]):
+        if await check_DM_interaction(interaction):
+            return
         await interaction.response.defer(ephemeral=False)
         original_chat_model = client.chat_model
         original_openAI_gpt_engine = client.openAI_gpt_engine
@@ -130,6 +149,8 @@ def run_discord_bot():
 
     @client.tree.command(name="reset", description="Complete reset conversation history")
     async def reset(interaction: discord.Interaction):
+        if await check_DM_interaction(interaction):
+            return
         await interaction.response.defer(ephemeral=False)
         if client.chat_model == "OFFICIAL":
             client.chatbot = client.get_chatbot_model()
@@ -149,6 +170,8 @@ def run_discord_bot():
 
     @client.tree.command(name="help", description="Show help for the bot")
     async def help(interaction: discord.Interaction):
+        if await check_DM_interaction(interaction):
+            return
         await interaction.response.defer(ephemeral=False)
         await interaction.followup.send(""":star: **BASIC COMMANDS** \n
         - `/chat [message]` Chat with ChatGPT!
@@ -182,6 +205,8 @@ https://github.com/Zero6992/chatGPT-discord-bot""")
 
     @client.tree.command(name="info", description="Bot information")
     async def info(interaction: discord.Interaction):
+        if await check_DM_interaction(interaction):
+            return
         await interaction.response.defer(ephemeral=False)
         chat_engine_status = client.openAI_gpt_engine
         chat_model_status = client.chat_model
@@ -204,6 +229,8 @@ gpt-engine: {chat_engine_status}
 
     @client.tree.command(name="draw", description="Generate an image with the Dall-e-3 model")
     async def draw(interaction: discord.Interaction, *, prompt: str):
+        if await check_DM_interaction(interaction):
+            return
         if interaction.user == client.user:
             return
 
@@ -240,6 +267,8 @@ gpt-engine: {chat_engine_status}
         app_commands.Choice(name="Jailbreak", value="jailbreak")
     ])
     async def switchpersona(interaction: discord.Interaction, persona: app_commands.Choice[str]):
+        if await check_DM_interaction(interaction):
+            return
         if interaction.user == client.user:
             return
 
